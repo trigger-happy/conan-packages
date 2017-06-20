@@ -1,7 +1,7 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
 import os
 
-class LibpqConn(ConanFile):
+class LibHaruConn(ConanFile):
     name = "libharu"
     version = "2.3.0"
     license = "ZLIB https://github.com/libharu/libharu/blob/master/LICENCE"

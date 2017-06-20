@@ -1,12 +1,12 @@
-from conans import ConanFile, AutoToolsBuildEnvironment, tools
+from conans import ConanFile, tools
 import os
 
-class LibpqConn(ConanFile):
+class PangoConn(ConanFile):
     name = "pango"
     version = "1.40.6"
     license = "LGPL https://git.gnome.org/browse/pango/tree/COPYING"
     url = "https://github.com/trigger-happy/conan-packages"
-    description = "C library for generating PDF documents"
+    description = "A library for layout and rendering text"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False]}
     default_options = "shared=False"
