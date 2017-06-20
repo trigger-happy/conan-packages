@@ -16,7 +16,6 @@ class LibpqConn(ConanFile):
         pkgLink = 'https://ftp.postgresql.org/pub/source/v{pkgver}/postgresql-{pkgver}.tar.bz2'.format(pkgver=self.version)
         self.run("curl -JOL " + pkgLink)
         self.run("tar xf postgresql-{pkgver}.tar.bz2".format(pkgver=self.version))
-        self.run("mkdir deploy")
 
     def build(self):
         env_build = AutoToolsBuildEnvironment(self)
@@ -28,9 +27,8 @@ class LibpqConn(ConanFile):
                     self.run("make install")
 
     def package(self):
-        with tools.chdir("deploy"):
-            self.copy("lib/*", dst="lib", keep_path=False)
-            self.copy("include/*", dst=".", keep_path=True)
+        self.copy("lib/*", dst="lib", keep_path=False)
+        self.copy("include/*", dst=".", keep_path=True)
 
     def package_info(self):
         self.cpp_info.libs = ["pq"]
