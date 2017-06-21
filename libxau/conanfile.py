@@ -31,4 +31,4 @@ class LibxauConan(ConanFile):
         self.copy("include/*", dst=".", keep_path=True)
 
     def package_info(self):
-        self.cpp_info.libs = ["libXau"]
+        self.cpp_info.libs = ["Xau"]
