@@ -18,12 +18,22 @@ class LibxcbConan(ConanFile):
         self.run("curl -JOL " + pkgLink)
         self.run("tar xf libxcb-{version}.tar.bz2".format(version=self.version))
 
+    def configure(self):
+        self.requires("libxdmcp/1.1.2@trigger-happy/stable")
+        self.requires("libxau/1.0.8@trigger-happy/stable")
+        self.options["libxdmcp/1.1.2"].shared = self.options.shared
+        self.options["libxau/1.0.8"].shared = self.options.shared
+
     def build(self):
         envBuild = AutoToolsBuildEnvironment(self)
         installPrefix=os.getcwd()
+        sharedFlag = "--disable-shared"
+        if self.options.shared:
+            sharedFlag = "--enable-shared"
+
         with tools.chdir("libxcb-{version}".format(version=self.version)):
             with tools.environment_append(envBuild.vars):
-                self.run("./configure --prefix={0} --enable-xinput --enable-xkb".format(installPrefix))
+                self.run("./configure --prefix={0} --enable-xinput --enable-xkb {1}".format(installPrefix, sharedFlag))
                 self.run("make install")
 
     def package(self):
