@@ -1,5 +1,6 @@
 from conans import ConanFile, CMake
-
+import urllib3
+import tarfile
 
 class FltkConan(ConanFile):
     name = "FLTK"
@@ -13,9 +14,19 @@ class FltkConan(ConanFile):
     generators = "cmake"
 
     def source(self):
-        self.run("curl -JOL http://fltk.org/pub/fltk/1.3.4/fltk-1.3.4-1-source.tar.gz")
-        self.run("tar xf fltk-1.3.4-1-source.tar.gz")
-        self.run("cd fltk-1.3.4-1")
+        fileName = 'fltk-{0}-1-source.tar.gz'.format(self.version)
+        sourceUrl = 'http://fltk.org/pub/fltk/1.3.4/fltk-{0}-1-source.tar.gz'.format(self.version)
+        pool = urllib3.PoolManager()
+        request = pool.request('GET', sourceUrl)
+        if request.status == 200:
+            f = open(fileName, 'w')
+            f.write(request.data)
+            f.close()
+            tf = tarfile.open(fileName)
+            tf.extractall('.')
+            tf.close()
+        else:
+            raise Exception('Could not download source file')
 
     def build(self):
         cmake = CMake(self.settings)
