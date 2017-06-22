@@ -1,4 +1,6 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
+import urllib3
+import tarfile
 import os
 
 
@@ -14,9 +16,19 @@ class LibxcbConan(ConanFile):
     generators = "cmake"
 
     def source(self):
-        pkgLink = 'https://xcb.freedesktop.org/dist/libxcb-{version}.tar.bz2'.format(version=self.version)
-        self.run("curl -JOL " + pkgLink)
-        self.run("tar xf libxcb-{version}.tar.bz2".format(version=self.version))
+        pkgLink = 'https://xcb.freedesktop.org/dist/libxcb-{0}.tar.bz2'.format(self.version)
+        fileName = 'libxcb-{0}.tar.bz2'.format(self.version)
+        pool = urllib3.PoolManager()
+        request = pool.request('GET', pkgLink)
+        if request.status == 200:
+            f = open(fileName, 'w')
+            f.write(request.data)
+            f.close()
+            tf = tarfile.open(fileName)
+            tf.extractall('.')
+            tf.close()
+        else:
+            raise Exception('Could not download source file')
 
     def configure(self):
         self.requires("libxdmcp/1.1.2@trigger-happy/stable")
@@ -27,13 +39,10 @@ class LibxcbConan(ConanFile):
     def build(self):
         envBuild = AutoToolsBuildEnvironment(self)
         installPrefix=os.getcwd()
-        sharedFlag = "--disable-shared"
-        if self.options.shared:
-            sharedFlag = "--enable-shared"
-
+        shared = "--enable-shared" if self.options.shared else "--disable-shared"
         with tools.chdir("libxcb-{version}".format(version=self.version)):
             with tools.environment_append(envBuild.vars):
-                self.run("./configure --prefix={0} --enable-xinput --enable-xkb {1}".format(installPrefix, sharedFlag))
+                self.run("./configure --prefix={0} --enable-xinput --enable-xkb {1}".format(installPrefix, shared))
                 self.run("make install")
 
     def package(self):
