@@ -1,4 +1,6 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
+import urllib3
+import tarfile
 import os
 
 
@@ -14,9 +16,19 @@ class LibxauConan(ConanFile):
     generators = "cmake"
 
     def source(self):
-        pkgLink = 'https://xorg.freedesktop.org/releases/individual/lib/libXau-{version}.tar.bz2'.format(version=self.version)
-        self.run("curl -JOL " + pkgLink)
-        self.run("tar xf libXau-{version}.tar.bz2".format(version=self.version))
+        pkgLink = 'https://xorg.freedesktop.org/releases/individual/lib/libXau-{0}.tar.bz2'.format(self.version)
+        fileName = 'libXau-{0}.tar.bz2'.format(self.version)
+        pool = urllib3.PoolManager()
+        request = pool.request('GET', pkgLink)
+        if request.status == 200:
+            f = open(fileName, 'w')
+            f.write(request.data)
+            f.close()
+            tf = tarfile.open(fileName)
+            tf.extractall('.')
+            tf.close()
+        else:
+            raise Exception('Could not download source file')
 
     def configure(self):
         self.requires("xproto/7.0.31@trigger-happy/stable")
@@ -25,13 +37,10 @@ class LibxauConan(ConanFile):
     def build(self):
         envBuild = AutoToolsBuildEnvironment(self)
         installPrefix=os.getcwd()
-        sharedFlag = "--disable-shared"
-        if self.options.shared:
-            sharedFlag = "--enable-shared"
-
+        shared = "--enable-shared" if self.options.shared else "--disable-shared"
         with tools.chdir("libXau-{version}".format(version=self.version)):
             with tools.environment_append(envBuild.vars):
-                self.run("./configure --prefix={0} {1}".format(installPrefix, sharedFlag))
+                self.run("./configure --prefix={0} {1}".format(installPrefix, shared))
                 self.run("make install")
 
     def package(self):
