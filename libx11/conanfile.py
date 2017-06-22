@@ -1,4 +1,6 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
+import urllib3
+import tarfile
 import os
 
 
@@ -14,9 +16,19 @@ class Libx11Conan(ConanFile):
     generators = "cmake"
 
     def source(self):
-        pkgLink = 'https://xorg.freedesktop.org/releases/individual/lib/libX11-{version}.tar.bz2'.format(version=self.version)
-        self.run("curl -JOL " + pkgLink)
-        self.run("tar xf libX11-{version}.tar.bz2".format(version=self.version))
+        pkgLink = 'https://xorg.freedesktop.org/releases/individual/lib/libX11-{0}.tar.bz2'.format(self.version)
+        fileName = 'libX11-{0}.tar.bz2'.format(self.version)
+        pool = urllib3.PoolManager()
+        request = pool.request('GET', pkgLink)
+        if request.status == 200:
+            f = open(fileName, 'w')
+            f.write(request.data)
+            f.close()
+            tf = tarfile.open(fileName)
+            tf.extractall('.')
+            tf.close()
+        else:
+            raise Exception('Could not download source file')
 
     def configure(self):
         self.requires("libxcb/1.12@trigger-happy/stable")
@@ -29,13 +41,10 @@ class Libx11Conan(ConanFile):
     def build(self):
         envBuild = AutoToolsBuildEnvironment(self)
         installPrefix=os.getcwd()
-        sharedFlag = "--disable-shared"
-        if self.options.shared:
-            sharedFlag = "--enable-shared"
-
-        with tools.chdir("libX11-{version}".format(version=self.version)):
+        shared = "--enable-shared" if self.options.shared else "--disable-shared"
+        with tools.chdir("libX11-{0}".format(self.version)):
             with tools.environment_append(envBuild.vars):
-                self.run("./configure --prefix={0} --disable-xf86bigfont {1}".format(installPrefix, sharedFlag))
+                self.run("./configure --prefix={0} --disable-xf86bigfont {1}".format(installPrefix, shared))
                 self.run("make install")
 
     def package(self):
