@@ -1,4 +1,6 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
+import urllib3
+import tarfile
 import os
 
 
@@ -14,9 +16,19 @@ class InputprotoConan(ConanFile):
     generators = "cmake"
 
     def source(self):
-        pkgLink = 'https://xorg.freedesktop.org/releases/individual/proto/inputproto-{version}.tar.bz2'.format(version=self.version)
-        self.run("curl -JOL " + pkgLink)
-        self.run("tar xf inputproto-{version}.tar.bz2".format(version=self.version))
+        pkgLink = 'https://xorg.freedesktop.org/releases/individual/proto/inputproto-{0}.tar.bz2'.format(self.version)
+        fileName = 'inputproto-{0}.tar.bz2'.format(self.version)
+        pool = urllib3.PoolManager()
+        request = pool.request('GET', pkgLink)
+        if request.status == 200:
+            f = open(fileName, 'w')
+            f.write(request.data)
+            f.close()
+            tf = tarfile.open(fileName)
+            tf.extractall('.')
+            tf.close()
+        else:
+            raise Exception('Could not download source file')
 
     def build(self):
         envBuild = AutoToolsBuildEnvironment(self)
