@@ -33,9 +33,10 @@ class InputprotoConan(ConanFile):
     def build(self):
         envBuild = AutoToolsBuildEnvironment(self)
         installPrefix=os.getcwd()
+        shared = "--enable-shared" if self.options.shared else "--disable-shared"
         with tools.chdir("inputproto-{version}".format(version=self.version)):
             with tools.environment_append(envBuild.vars):
-                self.run("./configure --prefix={0}".format(installPrefix))
+                self.run("./configure --prefix={0} {1}".format(installPrefix, shared))
                 self.run("make install")
 
     def package(self):
