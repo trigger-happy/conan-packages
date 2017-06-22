@@ -28,6 +28,18 @@ class FltkConan(ConanFile):
         else:
             raise Exception('Could not download source file')
 
+    def configure(self):
+        self.requires("libxdmcp/1.1.2@trigger-happy/stable")
+        self.requires("libxau/1.0.8@trigger-happy/stable")
+        self.requires("libxcb/1.12@trigger-happy/stable")
+        self.requires("pcre/8.40.0@kmaragon/stable")
+        self.requires("graphite/1.3.10@trigger-happy/stable")
+        self.options["libxdmcp/1.1.2"].shared = self.options.shared
+        self.options["libxau/1.0.8"].shared = self.options.shared
+        self.options["libxcb/1.12"].shared = self.options.shared
+        self.options["pcre/8.40.0"].shared = self.options.shared
+        self.options["graphite/1.3.10"].shared = self.options.shared
+
     def build(self):
         cmake = CMake(self.settings)
         shared = "-DBUILD_SHARED_LIBS=ON" if self.options.shared else ""
