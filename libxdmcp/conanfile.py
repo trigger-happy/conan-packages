@@ -1,4 +1,6 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
+import urllib3
+import tarfile
 import os
 
 
@@ -14,16 +16,31 @@ class LibxdmcpConan(ConanFile):
     generators = "cmake"
 
     def source(self):
-        pkgLink = 'https://xorg.freedesktop.org/releases/individual/lib/libXdmcp-{version}.tar.bz2'.format(version=self.version)
-        self.run("curl -JOL " + pkgLink)
-        self.run("tar xf libXdmcp-{version}.tar.bz2".format(version=self.version))
+        pkgLink = 'https://xorg.freedesktop.org/releases/individual/lib/libXdmcp-{0}.tar.bz2'.format(self.version)
+        fileName = 'libXdmcp-{0}.tar.bz2'.format(self.version)
+        pool = urllib3.PoolManager()
+        request = pool.request('GET', pkgLink)
+        if request.status == 200:
+            f = open(fileName, 'w')
+            f.write(request.data)
+            f.close()
+            tf = tarfile.open(fileName)
+            tf.extractall('.')
+            tf.close()
+        else:
+            raise Exception('Could not download source file')
+
+    def configure(self):
+        self.requires("xproto/7.0.31@trigger-happy/stable")
+        self.options["xproto/7.0.13"].shared = self.options.shared
 
     def build(self):
         envBuild = AutoToolsBuildEnvironment(self)
         installPrefix=os.getcwd()
-        with tools.chdir("libXdmcp-{version}".format(version=self.version)):
+        shared = "--enable-shared" if self.options.shared else "--disable-shared"
+        with tools.chdir("libXdmcp-{0}".format(self.version)):
             with tools.environment_append(envBuild.vars):
-                self.run("./configure --prefix={0}".format(installPrefix))
+                self.run("./configure --prefix={0} {1}".format(installPrefix, shared))
                 self.run("make install")
 
     def package(self):
