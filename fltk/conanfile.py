@@ -34,11 +34,13 @@ class FltkConan(ConanFile):
         self.requires("libxcb/1.12@trigger-happy/stable")
         self.requires("pcre/8.40.0@kmaragon/stable")
         self.requires("graphite/1.3.10@trigger-happy/stable")
+        self.requires("libx11/1.6.5@trigger-happy/stable")
         self.options["libxdmcp/1.1.2"].shared = self.options.shared
         self.options["libxau/1.0.8"].shared = self.options.shared
         self.options["libxcb/1.12"].shared = self.options.shared
         self.options["pcre/8.40.0"].shared = self.options.shared
         self.options["graphite/1.3.10"].shared = self.options.shared
+        self.options["libx11/1.6.5"].shared = self.options.shared
 
     def build(self):
         cmake = CMake(self.settings)
